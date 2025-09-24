@@ -10,12 +10,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # ✅ Load OpenAI API key
-        load_dotenv('../openAI.env')
-        client = OpenAI(api_key=os.environ.get('openai_apikey'))
+        load_dotenv('openAI.env')
+        client = OpenAI(api_key=os.environ.get('openia_apikey'))
 
         # ✅ Change these titles for any movies you want to compare
-        movie1 = Movie.objects.get(title="La lista de Schindler")
-        movie2 = Movie.objects.get(title="El club de la pelea")
+        movie1 = Movie.objects.get(title="La captura")
+        movie2 = Movie.objects.get(title="Castillo medieval")
+
 
         def get_embedding(text):
             response = client.embeddings.create(

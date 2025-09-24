@@ -8,6 +8,13 @@ import matplotlib
 import io
 import urllib, base64
 
+# --- imports añadidos para recomendaciones ---
+import os
+import numpy as np
+from dotenv import load_dotenv
+from openai import OpenAI
+# --------------------------------------------
+
 def home(request):
     #return HttpResponse('<h1>Welcome to Home Page</h1>')
     #return render(request, 'home.html')
@@ -123,3 +130,46 @@ def generate_bar_chart(data, xlabel, ylabel):
     buffer.close()
     graphic = base64.b64encode(image_png).decode('utf-8')
     return graphic
+
+
+# ===================== RECOMENDACIONES (nuevo) =====================
+
+def recommend_view(request):
+    """
+    Recibe un prompt, genera su embedding con OpenAI y recomienda la película más similar
+    comparando con los embeddings guardados en Movie.emb (BinaryField).
+    """
+    # Cargar API key (acepta tus 3 variantes comunes)
+    load_dotenv('openAI.env') or load_dotenv()
+    api_key = os.getenv('openai_api_key') or os.getenv('openia_apikey') or os.getenv('OPENAI_API_KEY')
+    client = OpenAI(api_key=api_key)
+
+    context = {"query": "", "result": None, "top": []}
+
+    if request.method == "POST":
+        query = (request.POST.get("q") or "").strip()
+        context["query"] = query
+        if query:
+            # 1) Embedding del prompt
+            resp = client.embeddings.create(model="text-embedding-3-small", input=[query])
+            q_vec = np.array(resp.data[0].embedding, dtype=np.float32)
+
+            # 2) Similitud coseno contra cada película con embedding
+            def cos(a, b):
+                na, nb = np.linalg.norm(a), np.linalg.norm(b)
+                return 0.0 if na == 0 or nb == 0 else float(np.dot(a, b) / (na * nb))
+
+            rows = []
+            for m in Movie.objects.exclude(emb__isnull=True).exclude(emb=b""):
+                v = np.frombuffer(m.emb, dtype=np.float32)
+                rows.append((cos(q_vec, v), m))
+
+            rows.sort(reverse=True, key=lambda x: x[0])
+
+            if rows:
+                score, movie = rows[0]
+                context["result"] = {"movie": movie, "score": round(score, 4)}
+                # Top 3 opcional
+                context["top"] = [{"movie": m, "score": round(s, 4)} for s, m in rows[:3]]
+
+    return render(request, 'recommend.html', context)

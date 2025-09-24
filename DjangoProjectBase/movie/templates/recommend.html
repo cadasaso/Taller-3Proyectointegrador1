@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Recommendations{% endblock %}
+
+{% block content %}
+  <div class="mb-2 fw-semibold">Recommend for Movie:</div>
+
+  <form method="post" class="mb-4">
+    {% csrf_token %}
+    <input
+      name="q"
+      type="text"
+      class="form-control form-control-lg"
+      placeholder="pelicula de personas felices"
+      value="{{ query|default:'' }}"
+      aria-label="Recommendation prompt"
+    />
+    <button class="btn btn-primary mt-3" type="submit">Recommend</button>
+  </form>
+
+  <p class="text-muted">Recommending for: {{ query|default:"None" }}</p>
+
+  {% if result %}
+    <div class="card shadow-sm rounded-3 overflow-hidden" style="max-width: 960px;">
+      {% if result.movie.image %}
+        <img src="{{ result.movie.image.url }}" alt="{{ result.movie.title }}" class="w-100" style="object-fit: cover;">
+      {% endif %}
+      <div class="card-body">
+        <h4 class="fw-bold">{{ result.movie.title }}</h4>
+        <p class="mb-2">{{ result.movie.description|default:"Sin descripción" }}</p>
+        <span class="badge bg-secondary">Similarity: {{ result.score }}</span>
+      </div>
+    </div>
+
+    {% if top %}
+      <h6 class="mt-4 mb-2">Top 3</h6>
+      <ul class="list-group" style="max-width: 640px;">
+        {% for item in top %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ item.movie.title }}
+            <span class="badge bg-light text-dark">{{ item.score }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+  {% elif query %}
+    <div class="alert alert-warning mt-3">
+      No se encontraron películas con embedding para comparar.
+    </div>
+  {% endif %}
+{% endblock %}

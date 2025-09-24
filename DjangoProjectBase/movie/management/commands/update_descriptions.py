@@ -4,16 +4,19 @@ from django.core.management.base import BaseCommand
 from movie.models import Movie
 from dotenv import load_dotenv
 
+# Carga las variables de entorno desde el archivo .env
+
+
 class Command(BaseCommand):
     help = "Update movie descriptions using OpenAI API"
 
     def handle(self, *args, **kwargs):
         # ✅ Load environment variables from the .env file
-        load_dotenv('../openAI.env')
+        load_dotenv('openAI.env')
 
         # ✅ Initialize the OpenAI client with the API key
         client = OpenAI(
-            api_key=os.environ.get('openai_apikey'),
+            api_key=os.environ.get('openia_apikey'),
         )
 
         # ✅ Helper function to send prompt and get completion from OpenAI
@@ -59,6 +62,7 @@ class Command(BaseCommand):
                 print(f"Updated Description: {updated_description}")
 
                 # ✅ Save the new description to the database
+
                 movie.description = updated_description
                 movie.save()
 

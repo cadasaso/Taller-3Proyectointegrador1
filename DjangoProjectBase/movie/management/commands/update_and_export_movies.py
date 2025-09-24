@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # ✅ Load environment variables
-        load_dotenv('../openAI.env')
+        load_dotenv('openAI.env')
 
         # ✅ Initialize OpenAI client
         client = OpenAI(
